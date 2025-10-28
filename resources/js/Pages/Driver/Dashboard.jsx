@@ -1,370 +1,207 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
-import DashboardLayout from '../../Components/DashboardLayout';
-import { useTranslation } from '../../hooks/useTranslation';
-import { 
-    Car, 
-    DollarSign, 
-    TrendingUp, 
-    Award, 
-    Power,
-    RefreshCw,
-    MapPin,
-    Users,
-    Calendar,
-    ArrowRight,
-    CheckCircle,
-    XCircle,
-    BarChart3,
-    Wallet
-} from 'lucide-react';
+import { Head, Link } from '@inertiajs/react';
+import AppLayout from '../Layouts/AppLayout';
 
-export default function DriverDashboard({ driver, stats, available_rides }) {
-    const { trans } = useTranslation();
-    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-    const [currentStatus, setCurrentStatus] = useState(driver?.status || 'offline');
-
-    // Update status when driver prop changes
-    useEffect(() => {
-        if (driver?.status) {
-            setCurrentStatus(driver.status);
-        }
-    }, [driver?.status]);
-
-    const toggleStatus = () => {
-        setIsUpdatingStatus(true);
-        
-        router.post('/driver/update-status', {}, {
-            preserveScroll: false,
-            onSuccess: (page) => {
-                // Update status from server response
-                setCurrentStatus(page.props.driver.status);
-                setIsUpdatingStatus(false);
-            },
-            onError: () => {
-                setIsUpdatingStatus(false);
-            }
-        });
-    };
-
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 2
-        }).format(amount || 0);
-    };
-
-    const statusConfig = {
-        available: {
-            bg: 'bg-green-50',
-            border: 'border-green-200',
-            textColor: 'text-green-800',
-            subTextColor: 'text-green-600',
-            icon: CheckCircle,
-            iconColor: 'text-green-600',
-            title: 'متاح',
-            subtitle: 'جاهز لاستقبال الطلبات',
-            btnBg: 'bg-gray-600 hover:bg-gray-700',
-            btnText: 'غير متصل'
-        },
-        offline: {
-            bg: 'bg-gray-50',
-            border: 'border-gray-200',
-            textColor: 'text-gray-800',
-            subTextColor: 'text-gray-600',
-            icon: XCircle,
-            iconColor: 'text-gray-600',
-            title: 'غير متصل',
-            subtitle: 'لن تستقبل طلبات جديدة',
-            btnBg: 'bg-green-600 hover:bg-green-700',
-            btnText: 'متاح'
-        }
-    };
-
-    const config = statusConfig[currentStatus] || statusConfig.offline;
-    const StatusIcon = config.icon;
-
+export default function DriverDashboard({ user, trips, orders }) {
     return (
-        <DashboardLayout>
-            <Head title={trans('dashboard') + ' - ' + trans('driver')} />
-
+        <AppLayout user={user}>
+            <Head title="Driver Dashboard" />
+            
             <div className="space-y-6">
-                {/* Welcome Card */}
-                <div className="card bg-gradient-to-r from-blue-600 to-blue-700 text-white border-0 shadow-lg">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl font-bold mb-1">
-                                {trans('welcome')}، {driver?.user?.name}
-                            </h1>
-                            <p className="text-blue-100">{trans('what_to_do_today')}</p>
-                        </div>
-                        <div className="flex items-center gap-6">
-                            <div className="text-center border-r border-blue-500 pr-6 hidden md:block">
-                                <div className="flex items-center justify-center mb-1">
-                                    <Award className="w-5 h-5 text-yellow-300" />
-                                </div>
-                                <div className="text-2xl font-bold">{Number(stats?.rating || 5).toFixed(1)}</div>
-                                <div className="text-xs text-blue-200">التقييم</div>
-                            </div>
-                            <div className="text-center hidden md:block">
-                                <div className="flex items-center justify-center mb-1">
-                                    <TrendingUp className="w-5 h-5 text-green-300" />
-                                </div>
-                                <div className="text-2xl font-bold">{stats?.total_trips || 0}</div>
-                                <div className="text-xs text-blue-200">{trans('total_trips')}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Status Card */}
-                <div className={`card ${config.bg} border-2 ${config.border} shadow`}>
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-white rounded-lg shadow-sm">
-                                <StatusIcon className={`w-8 h-8 ${config.iconColor}`} />
-                            </div>
-                            <div>
-                                <h3 className={`text-xl font-bold ${config.textColor}`}>
-                                    حالتك: {config.title}
-                                </h3>
-                                <p className={`text-sm ${config.subTextColor} mt-1`}>{config.subtitle}</p>
-                            </div>
-                        </div>
-                        <button 
-                            onClick={toggleStatus}
-                            disabled={isUpdatingStatus}
-                            className={`btn ${config.btnBg} text-white px-6 py-2.5 rounded-lg shadow transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
-                        >
-                            {isUpdatingStatus ? (
-                                <>
-                                    <RefreshCw className="w-4 h-4 animate-spin" />
-                                    جاري التحديث...
-                                </>
-                            ) : (
-                                <>
-                                    <Power className="w-4 h-4" />
-                                    تغيير إلى {config.btnText}
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Today Rides */}
-                    <div className="card bg-white border border-gray-200 shadow hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600 mb-1">{trans('todays_rides')}</p>
-                                <p className="text-3xl font-bold text-gray-900">{stats?.today_rides || 0}</p>
-                            </div>
-                            <div className="p-3 bg-blue-50 rounded-lg">
-                                <Car className="w-8 h-8 text-blue-600" />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Today Earnings */}
-                    <div className="card bg-white border border-gray-200 shadow hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600 mb-1">{trans('todays_earnings')}</p>
-                                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats?.today_earnings)}</p>
-                            </div>
-                            <div className="p-3 bg-green-50 rounded-lg">
-                                <DollarSign className="w-8 h-8 text-green-600" />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Total Trips */}
-                    <div className="card bg-white border border-gray-200 shadow hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600 mb-1">{trans('total_trips')}</p>
-                                <p className="text-3xl font-bold text-gray-900">{stats?.total_trips || 0}</p>
-                            </div>
-                            <div className="p-3 bg-purple-50 rounded-lg">
-                                <BarChart3 className="w-8 h-8 text-purple-600" />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Total Earnings */}
-                    <div className="card bg-white border border-gray-200 shadow hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600 mb-1">{trans('total_earnings')}</p>
-                                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats?.total_earnings)}</p>
-                            </div>
-                            <div className="p-3 bg-yellow-50 rounded-lg">
-                                <Wallet className="w-8 h-8 text-yellow-600" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Available Rides */}
-                <div className="card bg-white border border-gray-200 shadow">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                            <Car className="w-6 h-6 text-blue-600" />
-                            {trans('available_rides')}
-                        </h2>
-                        <Link 
-                            href="/driver/rides" 
-                            className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-                        >
-                            عرض الكل
-                            <ArrowRight className="w-4 h-4" />
-                        </Link>
-                    </div>
-
-                    {currentStatus === 'offline' ? (
-                        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-                            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-                                <XCircle className="w-8 h-8 text-gray-400" />
-                            </div>
-                            <p className="text-lg font-semibold text-gray-900 mb-2">{trans('offline')}</p>
-                            <p className="text-sm text-gray-600 mb-6">{trans('start_receiving')}</p>
-                            <button
-                                onClick={toggleStatus}
-                                disabled={isUpdatingStatus}
-                                className="btn bg-green-600 hover:bg-green-700 text-white px-8 py-2.5 rounded-lg shadow transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
-                            >
-                                {isUpdatingStatus ? (
-                                    <>
-                                        <RefreshCw className="w-4 h-4 animate-spin" />
-                                        جاري التحديث...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Power className="w-4 h-4" />
-                                        تفعيل الحالة الآن
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    ) : available_rides && available_rides.length > 0 ? (
-                        <div className="space-y-3">
-                            {available_rides.map((ride) => (
-                                <div 
-                                    key={ride.id} 
-                                    className="p-5 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all"
-                                >
-                                    <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                                                    <Users className="w-4 h-4 text-gray-600" />
-                                                </div>
-                                                <span className="font-semibold text-gray-900">
-                                                    {ride.customer?.name || 'عميل'}
-                                                </span>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <div className="flex items-center gap-2 text-sm">
-                                                    <MapPin className="w-4 h-4 text-green-600" />
-                                                    <span className="text-gray-600">من:</span>
-                                                    <span className="font-medium text-gray-900">{ride.route?.from_city?.name}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-sm">
-                                                    <MapPin className="w-4 h-4 text-red-600" />
-                                                    <span className="text-gray-600">إلى:</span>
-                                                    <span className="font-medium text-gray-900">{ride.route?.to_city?.name}</span>
-                                                </div>
-                                                <div className="flex items-center gap-4 text-sm text-gray-600">
-                                                    <span className="flex items-center gap-1">
-                                                        <Users className="w-4 h-4" />
-                                                        {ride.passengers_count} راكب
-                                                    </span>
-                                                    <span className="flex items-center gap-1">
-                                                        <Calendar className="w-4 h-4" />
-                                                        {new Date(ride.created_at).toLocaleDateString('ar-SY')}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-2">
-                                            <div className="text-2xl font-bold text-gray-900">
-                                                {formatCurrency(ride.price)}
-                                            </div>
-                                            <Link
-                                                href={`/driver/rides`}
-                                                className="btn bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow transition-all inline-flex items-center gap-2"
-                                            >
-                                                قبول الرحلة
-                                                <ArrowRight className="w-4 h-4" />
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-                            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-                                <Car className="w-8 h-8 text-gray-400" />
-                            </div>
-                            <p className="text-lg font-semibold text-gray-900 mb-2">{trans('no_data')}</p>
-                            <p className="text-sm text-gray-600">{trans('email_notification')}</p>
-                            <div className="mt-4 inline-flex items-center gap-2 text-sm text-green-600 font-medium">
-                                <CheckCircle className="w-4 h-4" />
-                                {trans('available')}
-                            </div>
-                        </div>
-                    )}
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">لوحة تحكم السائق</h1>
+                    <p className="text-gray-600">مرحباً بك {user?.name}</p>
                 </div>
 
                 {/* Quick Actions */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <Link
-                        href="/driver/rides"
-                        className="card bg-white border border-gray-200 shadow hover:shadow-md transition-all group"
+                        href="/driver/trips/create"
+                        className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
                     >
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
-                                <Car className="w-8 h-8 text-blue-600" />
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <svg className="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
                             </div>
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-1">{trans('my_rides')}</h3>
-                                <p className="text-sm text-gray-600">{trans('view_all')}</p>
+                            <div className="ml-4">
+                                <h3 className="text-lg font-medium text-gray-900">رحلة جديدة</h3>
+                                <p className="text-gray-600">إنشاء رحلة جديدة</p>
                             </div>
                         </div>
                     </Link>
 
                     <Link
-                        href="/driver/earnings"
-                        className="card bg-white border border-gray-200 shadow hover:shadow-md transition-all group"
+                        href="/driver/orders"
+                        className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
                     >
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-green-50 rounded-lg group-hover:bg-green-100 transition-colors">
-                                <Wallet className="w-8 h-8 text-green-600" />
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
                             </div>
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-1">{trans('earnings')}</h3>
-                                <p className="text-sm text-gray-600">{trans('earnings_breakdown')}</p>
+                            <div className="ml-4">
+                                <h3 className="text-lg font-medium text-gray-900">الطلبات المخصصة</h3>
+                                <p className="text-gray-600">عرض الطلبات المخصصة لي</p>
                             </div>
                         </div>
                     </Link>
 
-                    <div className="card bg-white border border-gray-200 shadow hover:shadow-md transition-all cursor-pointer group">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors">
-                                <BarChart3 className="w-8 h-8 text-purple-600" />
+                    <Link
+                        href="/driver/trips"
+                        className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
+                    >
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <svg className="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
                             </div>
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-1">الإحصائيات</h3>
-                                <p className="text-sm text-gray-600">تقارير الأداء</p>
+                            <div className="ml-4">
+                                <h3 className="text-lg font-medium text-gray-900">رحلاتي</h3>
+                                <p className="text-gray-600">عرض جميع رحلاتي</p>
                             </div>
                         </div>
+                    </Link>
+                </div>
+
+                {/* My Trips */}
+                <div className="bg-white shadow rounded-lg">
+                    <div className="px-4 py-5 sm:p-6">
+                        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">رحلاتي</h3>
+                        {trips && trips.length > 0 ? (
+                            <div className="overflow-hidden">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                من - إلى
+                                            </th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                وقت المغادرة
+                                            </th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                السعر
+                                            </th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                الحالة
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {trips.map((trip) => (
+                                            <tr key={trip.id}>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {trip.from_location} - {trip.to_location}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {trip.departure_time}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {trip.price} ريال
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                        trip.status === 'active' ? 'bg-green-100 text-green-800' :
+                                                        trip.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                                                        'bg-gray-100 text-gray-800'
+                                                    }`}>
+                                                        {trip.status === 'active' ? 'نشط' :
+                                                         trip.status === 'completed' ? 'مكتمل' : 'معلق'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="text-center py-8">
+                                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <h3 className="mt-2 text-sm font-medium text-gray-900">لا توجد رحلات</h3>
+                                <p className="mt-1 text-sm text-gray-500">ابدأ بإنشاء رحلة جديدة</p>
+                                <div className="mt-6">
+                                    <Link
+                                        href="/driver/trips/create"
+                                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                                    >
+                                        إنشاء رحلة جديدة
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Assigned Orders */}
+                <div className="bg-white shadow rounded-lg">
+                    <div className="px-4 py-5 sm:p-6">
+                        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">الطلبات المخصصة لي</h3>
+                        {orders && orders.length > 0 ? (
+                            <div className="overflow-hidden">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                رقم الطلب
+                                            </th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                العميل
+                                            </th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                العنوان
+                                            </th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                الحالة
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {orders.map((order) => (
+                                            <tr key={order.id}>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    #{order.id}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {order.customer?.name}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {order.delivery_address}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                        order.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
+                                                        order.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                                                        order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                                        'bg-gray-100 text-gray-800'
+                                                    }`}>
+                                                        {order.status === 'assigned' ? 'مخصص' :
+                                                         order.status === 'in_progress' ? 'قيد التنفيذ' :
+                                                         order.status === 'delivered' ? 'تم التسليم' : 'غير محدد'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="text-center py-8">
+                                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <h3 className="mt-2 text-sm font-medium text-gray-900">لا توجد طلبات مخصصة</h3>
+                                <p className="mt-1 text-sm text-gray-500">ستظهر الطلبات المخصصة لك هنا</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-        </DashboardLayout>
+        </AppLayout>
     );
 }
-

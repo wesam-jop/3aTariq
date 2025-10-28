@@ -2,95 +2,89 @@
 
 namespace App\Models;
 
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens, SoftDeletes, HasRoles;
+    /** @use HasFactory<\Database\Factories\UserFactory> */
+    use HasFactory, Notifiable, HasApiTokens;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
     protected $fillable = [
         'name',
-        'email',
         'phone',
-        'phone_verified_at',
+        'email',
         'password',
+        'role',
         'user_type',
-        'avatar',
-        'wallet_balance',
+        'profile_image',
+        'is_verified',
         'is_active',
+        'fcm_token',
+        'latitude',
+        'longitude',
+        'phone_verified_at',
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
     protected $hidden = [
-        'password',
         'remember_token',
     ];
 
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'wallet_balance' => 'decimal:2',
+            'is_verified' => 'boolean',
             'is_active' => 'boolean',
         ];
     }
 
-    // العلاقات
-    public function driver()
+    // Relationships
+    public function orders()
     {
-        return $this->hasOne(Driver::class);
+        return $this->hasMany(Order::class, 'customer_id');
     }
 
-    public function ridesAsCustomer()
+    public function driverOrders()
     {
-        return $this->hasMany(Ride::class, 'customer_id');
+        return $this->hasMany(Order::class, 'driver_id');
     }
 
-    public function ridesAsDriver()
+    public function trips()
     {
-        return $this->hasMany(Ride::class, 'driver_id');
+        return $this->hasMany(Trip::class, 'driver_id');
     }
 
-    public function packagesAsCustomer()
+    public function tripBookings()
     {
-        return $this->hasMany(Package::class, 'customer_id');
+        return $this->hasMany(TripBooking::class, 'customer_id');
     }
 
-    public function packagesAsDriver()
+    public function chatsAsCustomer()
     {
-        return $this->hasMany(Package::class, 'driver_id');
+        return $this->hasMany(Chat::class, 'customer_id');
     }
 
-    public function payments()
+    public function chatsAsDriver()
     {
-        return $this->hasMany(Payment::class);
-    }
-
-    public function deviceTokens()
-    {
-        return $this->hasMany(DeviceToken::class);
-    }
-
-    // Helper Methods
-    public function isDriver(): bool
-    {
-        return $this->user_type === 'driver';
-    }
-
-    public function isCustomer(): bool
-    {
-        return $this->user_type === 'customer';
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->user_type === 'admin';
+        return $this->hasMany(Chat::class, 'driver_id');
     }
 }
-

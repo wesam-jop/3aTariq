@@ -2,18 +2,30 @@
 
 return [
 
+    /*
+    |--------------------------------------------------------------------------
+    | Third Party Services
+    |--------------------------------------------------------------------------
+    |
+    | This file is for storing the credentials for third party services such
+    | as Mailgun, Postmark, AWS and more. This file provides the de facto
+    | location for this type of information, allowing packages to have
+    | a conventional file to locate the various service credentials.
+    |
+    */
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
+    ],
+
+    'resend' => [
+        'key' => env('RESEND_KEY'),
     ],
 
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
-    ],
-
-    'resend' => [
-        'key' => env('RESEND_KEY'),
     ],
 
     'slack' => [
@@ -23,29 +35,4 @@ return [
         ],
     ],
 
-    // Firebase Configuration (المرحلة الثانية)
-    'firebase' => [
-        'server_key' => env('FIREBASE_SERVER_KEY'),
-        'api_key' => env('FIREBASE_API_KEY'),
-    ],
-
-    // Google Maps Configuration (المرحلة الثانية)
-    'google_maps' => [
-        'api_key' => env('GOOGLE_MAPS_API_KEY'),
-    ],
-
-    // Stripe Configuration (المرحلة الثانية)
-    'stripe' => [
-        'key' => env('STRIPE_KEY'),
-        'secret' => env('STRIPE_SECRET'),
-    ],
-
-    // Twilio Configuration (المرحلة الثانية)
-    'twilio' => [
-        'sid' => env('TWILIO_SID'),
-        'token' => env('TWILIO_TOKEN'),
-        'from' => env('TWILIO_FROM'),
-    ],
-
 ];
-

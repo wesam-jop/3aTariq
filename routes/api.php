@@ -3,52 +3,51 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\CityController;
-use App\Http\Controllers\Api\RouteController;
-use App\Http\Controllers\Api\RideController;
-use App\Http\Controllers\Api\PackageController;
-use App\Http\Controllers\Api\DriverController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\TripController;
+use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\DashboardController;
 
-// مسارات المصادقة (بدون حماية)
-Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
-});
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register API routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "api" middleware group. Make something great!
+|
+*/
 
-// مسارات محمية بـ Sanctum
+// Public routes
+Route::post('/send-otp', [AuthController::class, 'sendOtp']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/verify-login-otp', [AuthController::class, 'verifyLoginOtp']);
+
+// Protected routes
 Route::middleware('auth:sanctum')->group(function () {
+    // Auth routes
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/profile', [AuthController::class, 'profile']);
     
-    // معلومات المستخدم
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+    // Dashboard routes
+    Route::get('/dashboard', [DashboardController::class, 'index']);
     
-    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    // Order routes
+    Route::apiResource('orders', OrderController::class);
+    Route::post('/orders/{order}/accept', [OrderController::class, 'accept']);
+    Route::post('/orders/{order}/complete', [OrderController::class, 'complete']);
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
     
-    // المدن والمسارات (عامة للجميع)
-    Route::apiResource('cities', CityController::class)->only(['index', 'show']);
-    Route::apiResource('routes', RouteController::class)->only(['index', 'show']);
+    // Trip routes
+    Route::apiResource('trips', TripController::class);
+    Route::post('/trips/{trip}/book', [TripController::class, 'book']);
+    Route::post('/trips/{trip}/cancel-booking', [TripController::class, 'cancelBooking']);
     
-    // مسارات العملاء
-    Route::prefix('customer')->group(function () {
-        Route::apiResource('rides', RideController::class);
-        Route::apiResource('packages', PackageController::class);
-        Route::post('rides/{ride}/cancel', [RideController::class, 'cancel']);
-        Route::post('rides/{ride}/rate', [RideController::class, 'rate']);
-    });
-    
-    // مسارات السائقين
-    Route::prefix('driver')->middleware('driver.only')->group(function () {
-        Route::get('/dashboard', [DriverController::class, 'getDashboardData']);
-        Route::post('/update-status', [DriverController::class, 'updateStatus']);
-        Route::get('/available-rides', [DriverController::class, 'availableRides']);
-        Route::get('/available-packages', [DriverController::class, 'availablePackages']);
-        Route::post('/rides/{ride}/accept', [DriverController::class, 'acceptRide']);
-        Route::post('/rides/{ride}/complete', [DriverController::class, 'completeRide']);
-        Route::post('/packages/{package}/accept', [DriverController::class, 'acceptPackage']);
-        Route::post('/packages/{package}/complete', [DriverController::class, 'completePackage']);
-        Route::get('/earnings', [DriverController::class, 'earnings']);
-    });
+    // Chat routes
+    Route::apiResource('chats', ChatController::class);
+    Route::get('/chats/{chat}/messages', [ChatController::class, 'messages']);
+    Route::post('/chats/{chat}/messages', [ChatController::class, 'sendMessage']);
+    Route::post('/chats/{chat}/mark-read', [ChatController::class, 'markAsRead']);
 });
-

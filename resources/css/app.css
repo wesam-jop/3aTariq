@@ -1,100 +1,25 @@
-/* Google Fonts - Arabic and English */
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=El+Messiri:wght@400..700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import 'tailwindcss';
 
-/* Leaflet CSS */
-@import 'leaflet/dist/leaflet.css';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-    body {
-        @apply font-sans antialiased bg-gray-50 text-gray-900;
-    }
-    
-    /* Apply Arabic font and RTL for Arabic */
-    html[dir="rtl"] body,
-    html[lang="ar"] body,
-    body[dir="rtl"],
-    [lang="ar"] {
-        font-family: 'Cairo', 'El Messiri', sans-serif;
-        direction: rtl;
-    }
-    
-    /* Apply English font and LTR for English */
-    html[dir="ltr"] body,
-    html[lang="en"] body,
-    body[dir="ltr"],
-    [lang="en"] {
-        font-family: 'Roboto', sans-serif;
-        direction: ltr;
-    }
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
-@layer components {
-    .btn {
-        @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
-    }
-
-    .btn-primary {
-        @apply btn bg-blue-600 text-white hover:bg-blue-700;
-    }
-
-    .btn-secondary {
-        @apply btn bg-gray-600 text-white hover:bg-gray-700;
-    }
-
-    .btn-success {
-        @apply btn bg-green-600 text-white hover:bg-green-700;
-    }
-
-    .btn-danger {
-        @apply btn bg-red-600 text-white hover:bg-red-700;
-    }
-
-    .input {
-        @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
-    }
-
-    .card {
-        @apply bg-white rounded-lg shadow-md p-6 transition-all duration-300;
-    }
+/* Global RTL helpers */
+html[dir="rtl"] body {
+    direction: rtl;
+    text-align: right;
 }
 
-@layer utilities {
-    .animate-pulse-slow {
-        animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    
-    .delay-700 {
-        animation-delay: 700ms;
-    }
-
-    .line-clamp-4 {
-        display: -webkit-box;
-        -webkit-line-clamp: 4;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    /* Embla Carousel Styles */
-    .embla__slide {
-        position: relative;
-        min-width: 0;
-    }
-
-    @media (min-width: 768px) {
-        .embla__slide {
-            flex: 0 0 50% !important;
-        }
-    }
-
-    @media (min-width: 1024px) {
-        .embla__slide {
-            flex: 0 0 33.333% !important;
-        }
-    }
+/* Flip common flex spacing utilities for RTL when needed */
+.space-x-3 > :not([hidden]) ~ :not([hidden]),
+.space-x-4 > :not([hidden]) ~ :not([hidden]),
+.space-x-6 > :not([hidden]) ~ :not([hidden]),
+.space-x-8 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-x-reverse: 1;
 }
-
