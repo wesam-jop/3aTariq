@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use App\Models\Governorate;
 use App\Models\Region;
 
@@ -94,7 +95,7 @@ class AdminController extends Controller
     public function getUserDetails(User $user)
     {
         $user->load(['governorate', 'region']);
-        \Log::info('User details requested', [
+        Log::info('User details requested', [
             'user_id' => $user->id,
             'phone' => $user->phone,
             'identity_image' => $user->identity_image,
