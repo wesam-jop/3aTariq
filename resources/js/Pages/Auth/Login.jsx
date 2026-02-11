@@ -1,163 +1,222 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
+import axios from 'axios';
+import ApplicationLogo from '@/Components/ApplicationLogo';
+import Button from '@/Components/Button';
+import Input from '@/Components/Input';
+import OtpInput from 'react-otp-input';
+import toast, { Toaster } from 'react-hot-toast';
+import { FaMobileScreenButton } from "react-icons/fa6";
 
-export default function Login({ status }) {
-    const { data, setData, post, processing, errors } = useForm({
-        email: '',
-        password: '',
-        remember: false,
-    });
+export default function Login() {
+    const [step, setStep] = useState('phone'); // 'phone' or 'otp'
+    const [phone, setPhone] = useState('');
+    const [otp, setOtp] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const [userType, setUserType] = useState('customer');
-
-    const submit = (e) => {
+    const sendOtp = async (e) => {
         e.preventDefault();
-        post('/login');
+        if (!phone.trim()) {
+            toast.error('يرجى إدخال رقم الهاتف');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await axios.post('/send-login-otp', { phone });
+
+            if (response.data.success) {
+                toast.success('تم إرسال رمز التحقق بنجاح');
+                setStep('otp');
+            } else {
+                toast.error(response.data.message || 'Error sending OTP');
+            }
+        } catch (error) {
+            console.error(error);
+            if (error.response && error.response.status === 404) {
+                toast.error(error.response.data.message);
+            } else {
+                toast.error('حدث خطأ في الاتصال');
+            }
+        }
+        setLoading(false);
+    };
+
+    const verifyOtp = async (e) => {
+        e.preventDefault();
+        if (otp.length < 6) {
+            toast.error('يرجى إدخال رمز التحقق كاملاً');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await axios.post('/verify-login-otp', {
+                phone,
+                otp,
+            });
+
+            if (response.data.success) {
+                toast.success('تم تسجيل الدخول بنجاح');
+                window.location.href = '/dashboard';
+            } else {
+                toast.error(response.data.message || 'Invalid OTP');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error(error.response?.data?.message || 'حدث خطأ في الاتصال');
+        }
+        setLoading(false);
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <Head title="Login" />
-            
-            <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        تسجيل الدخول
-                    </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        أو{' '}
-                        <Link
-                            href="/register"
-                            className="font-medium text-blue-600 hover:text-blue-500"
-                        >
-                            إنشاء حساب جديد
+        <div className="min-h-screen flex bg-white" dir="rtl">
+            <Head title="تسجيل الدخول" />
+            <Toaster position="top-center" reverseOrder={false} />
+
+            {/* Right Side - Form */}
+            <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:w-1/2 xl:w-[500px] z-10 bg-white shadow-2xl">
+                <div className="mx-auto w-full max-w-sm lg:w-96">
+                    <div className="text-center">
+                        <Link href="/" className="inline-block mb-10">
+                            <ApplicationLogo className="h-16 w-auto text-primary mx-auto" />
                         </Link>
-                    </p>
-                </div>
-                
-                <form className="mt-8 space-y-6" onSubmit={submit}>
-                    <div className="rounded-md shadow-sm -space-y-px">
-                        {/* User Type Selection */}
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                نوع المستخدم
-                            </label>
-                            <div className="flex space-x-4">
-                                <label className="flex items-center">
-                                    <input
-                                        type="radio"
-                                        value="customer"
-                                        checked={userType === 'customer'}
-                                        onChange={(e) => setUserType(e.target.value)}
-                                        className="mr-2"
+                        <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
+                            {step === 'phone' ? 'مرحباً بعودتك' : 'التحقق من الدخول'}
+                        </h2>
+                        <p className="text-sm text-gray-600 mb-8">
+                            {step === 'phone'
+                                ? 'سجل دخولك الآن لمتابعة شحناتك وإدارة طلباتك'
+                                : `أدخل رمز التحقق المرسل إلى ${phone}`
+                            }
+                        </p>
+                    </div>
+
+                    <div className="mt-8">
+                        {step === 'phone' ? (
+                            <form onSubmit={sendOtp} className="space-y-6">
+                                <div>
+                                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                                        رقم الهاتف
+                                    </label>
+                                    <div className="relative rounded-md shadow-sm">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span className="text-gray-400 sm:text-sm"><FaMobileScreenButton /></span>
+                                        </div>
+                                        <Input
+                                            id="phone"
+                                            type="tel"
+                                            required
+                                            className="block w-full pl-10 text-right h-12 border-gray-300 focus:border-primary focus:ring-primary rounded-xl"
+                                            placeholder="05xxxxxxxx"
+                                            value={phone}
+                                            onChange={(e) => setPhone(e.target.value)}
+                                            dir="ltr"
+                                        />
+                                    </div>
+                                </div>
+
+                                <Button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full flex justify-center py-3 rounded-xl text-lg font-bold shadow-lg hover:shadow-xl transition-all duration-300"
+                                >
+                                    {loading ? 'جاري الإرسال...' : 'متابعة'}
+                                </Button>
+                            </form>
+                        ) : (
+                            <form onSubmit={verifyOtp} className="space-y-8">
+                                <div className="flex justify-center" dir="ltr">
+                                    <OtpInput
+                                        value={otp}
+                                        onChange={setOtp}
+                                        numInputs={6}
+                                        renderSeparator={<span className="mx-1 sm:mx-2"></span>}
+                                        renderInput={(props) => <input {...props} />}
+                                        inputType="tel"
+                                        shouldAutoFocus
+                                        inputStyle={{
+                                            width: '3rem',
+                                            height: '3.5rem',
+                                            margin: '0',
+                                            fontSize: '1.5rem',
+                                            borderRadius: '0.75rem',
+                                            border: '2px solid #e5e7eb',
+                                            outline: 'none',
+                                            textAlign: 'center',
+                                            fontWeight: 'bold',
+                                            color: '#1f2937',
+                                            backgroundColor: '#f9fafb',
+                                            transition: 'all 0.2s',
+                                        }}
+                                        focusStyle={{
+                                            borderColor: '#FFC107',
+                                            boxShadow: '0 0 0 4px rgba(255, 193, 7, 0.1)',
+                                            backgroundColor: '#ffffff',
+                                        }}
                                     />
-                                    عميل
-                                </label>
-                                <label className="flex items-center">
-                                    <input
-                                        type="radio"
-                                        value="driver"
-                                        checked={userType === 'driver'}
-                                        onChange={(e) => setUserType(e.target.value)}
-                                        className="mr-2"
-                                    />
-                                    سائق
-                                </label>
-                                <label className="flex items-center">
-                                    <input
-                                        type="radio"
-                                        value="admin"
-                                        checked={userType === 'admin'}
-                                        onChange={(e) => setUserType(e.target.value)}
-                                        className="mr-2"
-                                    />
-                                    إدارة
-                                </label>
+                                </div>
+
+                                <Button
+                                    type="submit"
+                                    disabled={loading || otp.length < 6}
+                                    className="w-full flex justify-center py-3 rounded-xl text-lg font-bold shadow-lg hover:shadow-xl transition-all duration-300"
+                                >
+                                    {loading ? 'جاري التحقق...' : 'تأكيد الدخول'}
+                                </Button>
+
+                                <div className="text-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep('phone')}
+                                        className="text-sm font-medium text-gray-500 hover:text-primary transition-colors"
+                                    >
+                                        تغيير رقم الهاتف
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+
+                        <div className="mt-10 relative">
+                            <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                                <div className="w-full border-t border-gray-200" />
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-white text-gray-500">
+                                    ليس لديك حساب؟
+                                </span>
                             </div>
                         </div>
 
-                        <div>
-                            <label htmlFor="email" className="sr-only">
-                                البريد الإلكتروني
-                            </label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                                placeholder="البريد الإلكتروني"
-                                value={data.email}
-                                onChange={(e) => setData('email', e.target.value)}
-                            />
-                            {errors.email && (
-                                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                            )}
-                        </div>
-                        
-                        <div>
-                            <label htmlFor="password" className="sr-only">
-                                كلمة المرور
-                            </label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="current-password"
-                                required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                                placeholder="كلمة المرور"
-                                value={data.password}
-                                onChange={(e) => setData('password', e.target.value)}
-                            />
-                            {errors.password && (
-                                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                            <input
-                                id="remember"
-                                name="remember"
-                                type="checkbox"
-                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                checked={data.remember}
-                                onChange={(e) => setData('remember', e.target.checked)}
-                            />
-                            <label htmlFor="remember" className="ml-2 block text-sm text-gray-900">
-                                تذكرني
-                            </label>
-                        </div>
-
-                        <div className="text-sm">
+                        <div className="mt-6 text-center">
                             <Link
-                                href="/password/reset"
-                                className="font-medium text-blue-600 hover:text-blue-500"
+                                href="/register"
+                                className="font-bold text-primary hover:text-yellow-500 transition-colors"
                             >
-                                نسيت كلمة المرور؟
+                                سجل الآن مجاناً
                             </Link>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    {status && (
-                        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                            {status}
-                        </div>
-                    )}
-
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                        >
-                            {processing ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
-                        </button>
-                    </div>
-                </form>
+            {/* Left Side - Image/Background */}
+            <div className="hidden lg:block relative w-0 flex-1 overflow-hidden bg-gray-900">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-gray-900/90 z-10 mix-blend-multiply"></div>
+                <img
+                    className="absolute inset-0 h-full w-full object-cover opacity-60 grayscale hover:grayscale-0 transition-all duration-1000"
+                    src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80"
+                    alt="Logistics background"
+                />
+                <div className="absolute z-20 bottom-20 right-20 text-white max-w-lg">
+                    <h2 className="text-5xl font-extrabold mb-6 leading-tight">
+                        شحناتك.. <br />
+                        <span className="text-primary">بأمان وسرعة</span>
+                    </h2>
+                    <p className="text-xl text-gray-300">
+                        انضم لآلاف العملاء والسائقين في المنصة الأحدث للخدمات اللوجستية في المملكة.
+                    </p>
+                </div>
             </div>
         </div>
     );

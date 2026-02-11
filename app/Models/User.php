@@ -32,6 +32,19 @@ class User extends Authenticatable
         'latitude',
         'longitude',
         'phone_verified_at',
+        'avatar',
+        'governorate',
+        'region',
+        'governorate_id',
+        'region_id',
+        'license_plate',
+        'national_id',
+        'car_type',
+        'car_model',
+        'transport_type',
+        'identity_image',
+        'license_image',
+        'is_approved',
     ];
 
     /**
@@ -42,6 +55,13 @@ class User extends Authenticatable
     protected $hidden = [
         'remember_token',
     ];
+
+    protected $appends = ['avatar_url'];
+
+    public function getAvatarUrlAttribute()
+    {
+        return $this->avatar ? asset('storage/' . $this->avatar) : null;
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -86,5 +106,20 @@ class User extends Authenticatable
     public function chatsAsDriver()
     {
         return $this->hasMany(Chat::class, 'driver_id');
+    }
+
+    public function savedAddresses()
+    {
+        return $this->hasMany(SavedAddress::class);
+    }
+
+    public function governorate()
+    {
+        return $this->belongsTo(Governorate::class);
+    }
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
     }
 }

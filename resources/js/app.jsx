@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { createInertiaApp } from '@inertiajs/react';
+import 'leaflet/dist/leaflet.css';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -14,6 +15,6 @@ createInertiaApp({
         root.render(<App {...props} />);
     },
     progress: {
-        color: '#4B5563',
+        color: '#2563EB',
     },
 });

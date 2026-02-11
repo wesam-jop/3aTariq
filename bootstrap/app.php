@@ -20,5 +20,23 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response) {
+            if ($response->getStatusCode() === 403) {
+                return \Inertia\Inertia::render('Error403')->toResponse(request());
+            }
+            
+            if ($response->getStatusCode() === 404) {
+                return \Inertia\Inertia::render('Error404')->toResponse(request());
+            }
+            
+            if ($response->getStatusCode() === 500) {
+                return \Inertia\Inertia::render('Error500')->toResponse(request());
+            }
+            
+            if ($response->getStatusCode() === 503) {
+                return \Inertia\Inertia::render('Error503')->toResponse(request());
+            }
+            
+            return $response;
+        });
     })->create();

@@ -25,6 +25,14 @@ Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/verify-login-otp', [AuthController::class, 'verifyLoginOtp']);
 
+// Governorate and Region routes - Public access
+Route::get('/governorates', function() {
+    return App\Models\Governorate::with('regions')->get();
+});
+Route::get('/governorates/{id}/regions', function($id) {
+    return App\Models\Region::where('governorate_id', $id)->get();
+});
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     // Auth routes

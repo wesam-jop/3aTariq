@@ -1,4 +1,11 @@
 <?php return array (
+  'barryvdh/laravel-ide-helper' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Barryvdh\\LaravelIdeHelper\\IdeHelperServiceProvider',
+    ),
+  ),
   'inertiajs/inertia-laravel' => 
   array (
     'providers' => 
@@ -53,6 +60,13 @@
     'providers' => 
     array (
       0 => 'Termwind\\Laravel\\TermwindServiceProvider',
+    ),
+  ),
+  'tightenco/ziggy' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Tighten\\Ziggy\\ZiggyServiceProvider',
     ),
   ),
 );

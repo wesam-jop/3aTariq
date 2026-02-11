@@ -19,8 +19,14 @@ class Order extends Model
         'delivery_latitude',
         'delivery_longitude',
         'description',
+        'type',
+        'category',
+        'trip_type',
+        'governorate_id',
+        'region_id',
         'price',
         'status',
+
         'accepted_at',
         'completed_at',
     ];
@@ -47,5 +53,15 @@ class Order extends Model
     public function chat()
     {
         return $this->hasOne(Chat::class);
+    }
+
+    public function governorate()
+    {
+        return $this->belongsTo(Governorate::class);
+    }
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
     }
 }

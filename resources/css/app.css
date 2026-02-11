@@ -6,8 +6,13 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Cairo', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-primary: #FFC107;
+    --color-primary-foreground: #1F2937;
+    --color-secondary: #374151;
+    /* Charcoal Gray */
+    --color-secondary-foreground: #ffffff;
 }
 
 /* Global RTL helpers */
@@ -17,9 +22,9 @@ html[dir="rtl"] body {
 }
 
 /* Flip common flex spacing utilities for RTL when needed */
-.space-x-3 > :not([hidden]) ~ :not([hidden]),
-.space-x-4 > :not([hidden]) ~ :not([hidden]),
-.space-x-6 > :not([hidden]) ~ :not([hidden]),
-.space-x-8 > :not([hidden]) ~ :not([hidden]) {
+.space-x-3> :not([hidden])~ :not([hidden]),
+.space-x-4> :not([hidden])~ :not([hidden]),
+.space-x-6> :not([hidden])~ :not([hidden]),
+.space-x-8> :not([hidden])~ :not([hidden]) {
     --tw-space-x-reverse: 1;
 }
